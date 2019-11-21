@@ -2,6 +2,7 @@
 import CodeCassiopee as cc
 import random as rd
 import numpy as np
+import fonctions_auxiliaires as fa
 
 
 # Cette fonction complète la création d'un input
