@@ -168,9 +168,9 @@ def decide_opt_alloc():
 
 
 
-# Cette fonction permet d'évaluer a posteriori le cout d'une allocation donnée
+# Cette fonction permet d'évaluer a posteriori le cost d'une allocation donnée
 # La variable allocation est du type list
-def evaluate_cout(allocation, requests_nb):
+def evaluate_cost(allocation, requests_nb):
     """
     Returns an estimation of the cost (number of requested videos that are not stored in the device and has to be transferred from server) of a determined allocation
     
@@ -196,7 +196,20 @@ def evaluate_cout(allocation, requests_nb):
 
 
 #Creations des 101 etats possibles pour 2 CPs
-def states_2CP(cache_capacity): 
+def states_2CP(cache_capacity):
+    """
+    Returns all possibles states (cache capacity allocations) for 2 Content Providers, given a cache_capacity
+    
+    Parameters
+    ------------ 
+    cache_capacity: int
+        The capacity of the cache 
+    
+    Returns
+    ----------
+    L: list of couples of int
+        L is the list with all couples giving the cache capcity allocate to each Content Provider.
+    """   
     L=[]
     for i in range(cache_capacity+1):
         L.append([i, cache_capacity-i])
@@ -205,28 +218,55 @@ def states_2CP(cache_capacity):
 
 #Création des 5151 états possibles pour  3 CPs
 def states_3CP(cache_capacity): 
+    """
+    Returns all possibles states (cache capacity allocations) for 3 Content Providers, given a cache_capacity
+    
+    Parameters
+    ------------ 
+    cache_capacity: int
+        The capacity of the cache 
+    
+    Returns
+    ----------
+    L: list of couples of int
+        L is the list with all truples giving the cache capcity allocate to each Content Provider.
+    """   
     L=[]
     for m in range (cache_capacity + 1): #le premier CP sur les 3
         for i in range(cache_capacity - m+1):
             L.append([m, states_2CP(cache_capacity - m)[i][0], states_2CP(cache_capacity - m)[i][1]])
     return L
 
+def states_nCP(L,n):
+    
+    
         
-#Recheche la position d'un état pour 3 CP
-def position_etat(alloc): #la liste est en fait une allocation à 3 CP
-    #la généralisation à k CP n'est pas faite ici par manque de la fonction states_kCP
+def state_index(alloc):
+    """
+    Returns the index of a given state (allocation)
+    
+    Parameters
+    ------------ 
+    alloc: list of int (truple)
+        The state, allocation that we want to know the index
+    
+    Returns
+    ----------
+    index: int
+        The index of the state (alloc)
+    """
     cache_capacity=alloc[0]+alloc[1]+alloc[2]
-    compteur=-1
+    index=-1
     for k in states_3CP(cache_capacity):
-        compteur +=1 ;
+        index +=1 ;
         if alloc == k:
-            return compteur
+            return index
 
 
 #Utile uniquement pour tester la convergence
 def sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle): #intervalle, request_rate, gamma, epsilon, cache_capacity, alpha
     init()
-    L_cout=[]
+    L_cost=[]
     ### CAS THEORIQUE : NOMBRE DE REQUETES INFINI ####
     if request_rate == -1:
         nb_iterations = 100
@@ -284,29 +324,29 @@ def sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle): #intervalle, r
             Q[action][index] = 0
         #### CALCUL DU GAIN #####
         if request_rate == -1:
-            cout_1 = 0
+            cost_1 = 0
             for cp in range(2):
                 requetes_vers_le_cp = nb_iterations*list_proba[cp] 
                 hit_ratio = af.list_sum(zipf_distribution(list_alpha[cp], nb_videos, conss_zipf[cp])[0 : (allocation[cp]-1)])
-                cout_1 += requetes_vers_le_cp * (1- hit_ratio)
+                cost_1 += requetes_vers_le_cp * (1- hit_ratio)
         else :
-            cout_1 = evaluate_cout(allocation, nb_iterations)
-        nouv_gain = nb_iterations - cout_1  # R dans la formule
+            cost_1 = evaluate_cost(allocation, nb_iterations)
+        nouv_gain = nb_iterations - cost_1  # R dans la formule
         ## MISE A JOUR DE LA TABLE###
-        index_prime = position_etat(allocation) # index du nouvel etat
+        index_prime = state_index(allocation) # index du nouvel etat
         Q[action][index] = Q[action][index] + alpha_de_sarsa*(nouv_gain + gamma*Q[action][index_prime] - Q[action][index])
         index = index_prime
-        L_cout.append(cout_1)
-    L_cout_moyen=[]
+        L_cost.append(cost_1)
+    L_cost_moyen=[]
     k=0
     while (k<nb_intervalle): #tous 100 intervalles
-        L_cout_moyen.append((af.list_sum(L_cout[k : k+100]) / 100.0))
+        L_cost_moyen.append((af.list_sum(L_cost[k : k+100]) / 100.0))
         k += 100
-    plt.plot(range(len(L_cout_moyen)), L_cout_moyen, ".")
+    plt.plot(range(len(L_cost_moyen)), L_cost_moyen, ".")
     #plt.xlim(4000, 5000)
-    plt.title('Cout en fonction du nombre d\' itération' )
+    plt.title('cost en fonction du nombre d\' itération' )
     plt.xlabel('Nombre d\'itérations')
-    plt.ylabel('Cout')
+    plt.ylabel('cost')
     plt.grid('on')
     #plt.rcParams["figure.figsize"] = [16, 9]
     plt.savefig('fig8.pdf')
@@ -315,14 +355,14 @@ def sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle): #intervalle, r
     return allocation
 
 
-#Utile uniquement pour chercher les couts (temps de calcul) de differentes parties de l'algo
+#Utile uniquement pour chercher les costs (temps de calcul) de differentes parties de l'algo
 def sarsa_pour_3_bis(request_rate, intervalle): #intervalle, request_rate, gamma, epsilon, cache_capacity, alpha
     debut_algo=time.time()
     nb_iterations = intervalle * request_rate
     allocation = [int(10*cache_capacity/10) , int(0*cache_capacity/10), int(0*cache_capacity/10)]
     index = 0
     rewards = np.zeros((7, 5151))  
-    gain_init = nb_iterations - evaluate_cout(allocation, nb_iterations)
+    gain_init = nb_iterations - evaluate_cost(allocation, nb_iterations)
     for i in range (0, nb_iterations):  #nb de requete
         alea = rd.random()
         old_allocation=deepcopy(allocation)  #copie sur un autre pointeur
@@ -369,16 +409,16 @@ def sarsa_pour_3_bis(request_rate, intervalle): #intervalle, request_rate, gamma
         if -1 in allocation:
             allocation = old_allocation
             rewards[action][index] = -150000000.0
-        cout_local = evaluate_cout(allocation, nb_iterations) #juste utilisé pour le print pour les tests
-        nouv_gain = nb_iterations - cout_local
+        cost_local = evaluate_cost(allocation, nb_iterations) #juste utilisé pour le print pour les tests
+        nouv_gain = nb_iterations - cost_local
         delta_gain = nouv_gain - gain_init # R dans la formule
         gain_init = nouv_gain
         avant_Q = time.time() - debut_algo
         print('avant_Q : ', avant_Q)
-        rewards[action][index] = rewards[action][index] + alpha_de_sarsa*(delta_gain + gamma*rewards[action][position_etat(allocation)] - rewards[action][index])
+        rewards[action][index] = rewards[action][index] + alpha_de_sarsa*(delta_gain + gamma*rewards[action][state_index(allocation)] - rewards[action][index])
         apres_Q=time.time() - debut_algo
         print('apres changement Q : ', apres_Q)
-        index = position_etat(allocation)
+        index = state_index(allocation)
     fin=time.time() - debut_algo
     print('Temps total SARSA : ', fin)
     return allocation
@@ -388,7 +428,7 @@ def sarsa_pour_3_bis(request_rate, intervalle): #intervalle, request_rate, gamma
 def tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, gama, epsi, alfa): #intervalle, request_rate, gamma, epsilon, cache_capacity, alpha
     ### REQUEST RATE = 100 ###
     init()
-    L_cout=[]
+    L_cost=[]
     ### CAS THEORIQUE : NOMBRE DE REQUETES INFINI ####
     if request_rate == -1:
         nb_iterations = 100
@@ -447,36 +487,36 @@ def tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, gama, eps
             Q[action][index] = 0
         #### CALCUL DU GAIN #####
         if request_rate == -1:
-            cout_1 = 0
+            cost_1 = 0
             for cp in range(2):
                 requetes_vers_le_cp = nb_iterations*list_proba[cp] 
                 hit_ratio = af.list_sum(zipf_distribution(list_alpha[cp], nb_videos, conss_zipf[cp])[0 : (allocation[cp]-1)])
-                cout_1 += requetes_vers_le_cp * (1- hit_ratio)
+                cost_1 += requetes_vers_le_cp * (1- hit_ratio)
         else :
-            cout_1 = evaluate_cout(allocation, nb_iterations)
-        nouv_gain = nb_iterations - cout_1  # R dans la formule
+            cost_1 = evaluate_cost(allocation, nb_iterations)
+        nouv_gain = nb_iterations - cost_1  # R dans la formule
         ## MISE A JOUR DE LA TABLE###
-        index_prime = position_etat(allocation) # index du nouvel etat
+        index_prime = state_index(allocation) # index du nouvel etat
         Q[action][index] = Q[action][index] + alfa*(nouv_gain + gama*Q[action][index_prime] - Q[action][index])
         index = index_prime
-        L_cout.append(cout_1)
-    return L_cout
+        L_cost.append(cost_1)
+    return L_cost
 
 
 def tests_de_gamma(request_rate, nb_intervalle, taille_intervalle):
     L_gamma = [0.1, 0.3, 0.5, 0.7]
     for k in L_gamma:
-        cout_du_sarsa=tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, k, epsilon, alpha_de_sarsa)
+        cost_du_sarsa=tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, k, epsilon, alpha_de_sarsa)
         ## On fait une moyenne tous les 10 points intervalles
-        L_cout_moyen=[]
+        L_cost_moyen=[]
         i=0
-        while (i<len(cout_du_sarsa)): #tous 10 intervalles
-            L_cout_moyen.append((af.list_sum(cout_du_sarsa[i : i+10]) / 10.0))
+        while (i<len(cost_du_sarsa)): #tous 10 intervalles
+            L_cost_moyen.append((af.list_sum(cost_du_sarsa[i : i+10]) / 10.0))
             i += 10
-        plt.plot(range(len(L_cout_moyen)), L_cout_moyen, ".", label = str(k))
+        plt.plot(range(len(L_cost_moyen)), L_cost_moyen, ".", label = str(k))
     plt.title('Test de Gamma' )
     plt.xlabel('Nombre d\'itérations')
-    plt.ylabel('Cout')
+    plt.ylabel('cost')
     plt.grid('on')
     plt.legend(loc = "best")
     plt.savefig('fig2.pdf')
@@ -487,16 +527,16 @@ def tests_de_gamma(request_rate, nb_intervalle, taille_intervalle):
 def tests_de_epsilon(request_rate, nb_intervalle, taille_intervalle):
     L_epsilon = [0.1, 0.3, 0.5, 0.9]
     for k in L_epsilon:
-        cout_du_sarsa=tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, gamma, k, alpha_de_sarsa)
-        L_cout_moyen=[]
+        cost_du_sarsa=tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, gamma, k, alpha_de_sarsa)
+        L_cost_moyen=[]
         i=0
-        while (i<len(cout_du_sarsa)): #tous 10 intervalles
-            L_cout_moyen.append((af.list_sum(cout_du_sarsa[i : i+10]) / 10.0))
+        while (i<len(cost_du_sarsa)): #tous 10 intervalles
+            L_cost_moyen.append((af.list_sum(cost_du_sarsa[i : i+10]) / 10.0))
             i += 10
-        plt.plot(range(len(L_cout_moyen)), L_cout_moyen, ".", label = str(k))
+        plt.plot(range(len(L_cost_moyen)), L_cost_moyen, ".", label = str(k))
     plt.title('Test de epsilon' )
     plt.xlabel('Nombre d\'itérations')
-    plt.ylabel('Cout')
+    plt.ylabel('cost')
     plt.grid('on')
     plt.legend(loc = "best")
     plt.savefig('fig8.pdf')
@@ -507,16 +547,16 @@ def tests_de_epsilon(request_rate, nb_intervalle, taille_intervalle):
 def tests_de_alpha(request_rate, nb_intervalle, taille_intervalle):
     list_alpha = [0.1, 0.3, 0.5, 0.9]
     for k in list_alpha:
-        cout_du_sarsa=tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, gamma, epsilon, k)
-        L_cout_moyen=[]
+        cost_du_sarsa=tests_sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle, gamma, epsilon, k)
+        L_cost_moyen=[]
         i=0
-        while (i<len(cout_du_sarsa)): #tous 10 intervalles
-            L_cout_moyen.append((af.list_sum(cout_du_sarsa[i : i+10]) / 10.0))
+        while (i<len(cost_du_sarsa)): #tous 10 intervalles
+            L_cost_moyen.append((af.list_sum(cost_du_sarsa[i : i+10]) / 10.0))
             i += 10
-        plt.plot(range(len(L_cout_moyen)), L_cout_moyen, ".", label = str(k))
+        plt.plot(range(len(L_cost_moyen)), L_cost_moyen, ".", label = str(k))
     plt.title('Test de alpha_de_sarsa' )
     plt.xlabel('Nombre d\'itérations')
-    plt.ylabel('Cout')
+    plt.ylabel('cost')
     plt.grid('on')
     plt.legend(loc = "best")
     plt.savefig('fig1.pdf')

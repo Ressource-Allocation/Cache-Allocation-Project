@@ -54,15 +54,15 @@ def evaluate_cout_2(allocation, proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_v
 def sarsa_pour_2(intervalle, request_rate, proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_videos_nf, cache_capacity):
     nb_iterations = intervalle * request_rate
     allocation = [cache_capacity/10.0 , 9*cache_capacity/10.0]
-    index = allocation[0]
-    rewards = np.zeros((3, 101))
+    alloc0 = allocation[0]
+    rewards = np.zeros((3, 101)) #why not 101*101 each state is reachable from another state it would converge quicker and I think it's more simple to code
     epsilon = rd.random()
     gain_init = nb_iterations - evaluate_cout_2(allocation, proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_videos_nf, nb_iterations)
     for i in range (nb_iterations):
         alea = rd.random()
-        if alea <= epsilon:
-            action = rd.randint(-1,1)
-            index += action
+        if alea <= epsilon: #what is the need?
+            action = rd.randint(-1,1) 
+            alloc0 += action
             if action == 1:
                 allocation[0] += 1
                 allocation[1] -= 1
@@ -73,44 +73,44 @@ def sarsa_pour_2(intervalle, request_rate, proba_yt, alpha_yt, alpha_nf, nb_vide
                 position = 1
             elif action == 0:
                 position = 2
-        elif rewards[0, index] == rewards[1, index] and rewards[0, index] == rewards[2, index]:
+        elif rewards[0, alloc0] == rewards[1, alloc0] and rewards[0, alloc0] == rewards[2, alloc0]:
             """TODO rewards [][] plutot non??"""
             action = rd.randint(-1,1)
             if action == 1:
                 allocation[0] += 1
                 allocation[1] -= 1
                 position = 0
-                index +=1
+                alloc0 +=1
             elif action == -1:
                 allocation[0] -= 1
                 allocation[1] += 1
                 position = 1
-                index -= 1
+                alloc0 -= 1
             else:
                 position = 2                
-        elif rewards[0, index] == rewards[1, index]:
-            if rewards[0, index] > rewards[2, index]:
+        elif rewards[0, alloc0] == rewards[1, alloc0]:
+            if rewards[0, alloc0] > rewards[2, alloc0]:
                 action = rd.randint(0,1)
                 if action == 0:
                     allocation[0] += 1
                     allocation[1] -= 1
-                    index += 1
+                    alloc0 += 1
                     position = 0
                 else:
                     allocation[0] -= 1
                     allocation[1] += 1
-                    index -= 1
+                    alloc0 -= 1
                     position = 1
             else:
                 action = 0
                 position = 2
-        elif rewards[0, index] == rewards[2, index]:
-            if rewards[0, index] > rewards[1, index]:
+        elif rewards[0, alloc0] == rewards[2, alloc0]:
+            if rewards[0, alloc0] > rewards[1, alloc0]:
                 action = rd.randint(0,1)
                 if action == 0:
                     allocation[0] += 1
                     allocation[1] -= 1
-                    index += 1
+                    alloc0 += 1
                     position = 0
                 else:
                     allocation[0] -= 0
@@ -119,15 +119,15 @@ def sarsa_pour_2(intervalle, request_rate, proba_yt, alpha_yt, alpha_nf, nb_vide
             else:
                 allocation[0] -= 1
                 allocation[1] += 1
-                index -= 1
+                alloc0 -= 1
                 position = 1
-        elif rewards[1, index] == rewards[2, index]:
-            if rewards[1, index] > rewards[0, index]:
+        elif rewards[1, alloc0] == rewards[2, alloc0]:
+            if rewards[1, alloc0] > rewards[0, alloc0]:
                 action = rd.randint(0,1)
                 if action == 0:
                     allocation[0] -= 1
                     allocation[1] += 1
-                    index -= 1
+                    alloc0 -= 1
                     position = 1
                 else:
                     allocation[0] -= 0
@@ -136,23 +136,23 @@ def sarsa_pour_2(intervalle, request_rate, proba_yt, alpha_yt, alpha_nf, nb_vide
             else:
                 allocation[0] += 1
                 allocation[1] -= 1
-                index += 1
+                alloc0 += 1
                 position = 0
         else:
-            max = rewards[:,index].max()
-            if rewards[0, index] == max:
+            max = rewards[:,alloc0].max()
+            if rewards[0, alloc0] == max:
                 position = 0
-                index += 1
-            if rewards[1, index] == max:
+                alloc0 += 1
+            if rewards[1, alloc0] == max:
                 position = 1
-                index -=1
-            if rewards[2, index] == max:
+                alloc0 -=1
+            if rewards[2, alloc0] == max:
                 position = 2
         nouv_gain = nb_iterations - evaluate_cout_2(allocation, proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_videos_nf, nb_iterations)
         delta_gain = nouv_gain - gain_init
         gain_init = nouv_gain
-        nouv_Q = fa.trouver_max_col(rewards, index)
-        rewards[position][index] = delta_gain + nouv_Q[0]
+        nouv_Q = fa.trouver_max_col(rewards, alloc0)
+        rewards[position][alloc0] = delta_gain + nouv_Q[0]
     return allocation
 
 
