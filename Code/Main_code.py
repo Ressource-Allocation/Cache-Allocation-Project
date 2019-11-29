@@ -237,32 +237,65 @@ def states_3CP(cache_capacity):
             L.append([m, states_2CP(cache_capacity - m)[i][0], states_2CP(cache_capacity - m)[i][1]])
     return L
 
-def states_nCP(L,n):
-    
-    
-        
-def state_index(alloc):
+
+def states_nCP(k,n):
     """
-    Returns the index of a given state (allocation)
+    Returns all possibles states (cache capacity allocations) for n Content Providers, given a cache capacity (k)
     
     Parameters
     ------------ 
-    alloc: list of int (truple)
-        The state, allocation that we want to know the index
+    k: int
+        The capacity of the cache
+    n: int
+        Number of Content Providers
+    
+    Returns
+    ----------
+    output_state_list: list of n_uples of int
+        The list with all n_uples giving the cache capcity allocate to each Content Provider.
+    """   
+    output_state_list=[]
+    if n==1:
+        output_state_list=[[n]]
+    elif n==2:
+        for j in range(k+1):
+            output_state_list.append([j, k-j])
+        return(output_state_list)
+    else:
+        for i in range (k+1):
+            other_states=states_nCP(k-i,n-1)
+            for state in other_states:
+                state.append(i)
+                output_state_list.append(state)
+        return(output_state_list)
+        
+def state_index(alloc):
+    """
+    Returns the index of a given allocation in the list of all possible states
+    
+    Parameters
+    ------------ 
+    alloc: list of int
+        an allocation of cache capacity 
     
     Returns
     ----------
     index: int
-        The index of the state (alloc)
-    """
-    cache_capacity=alloc[0]+alloc[1]+alloc[2]
-    index=-1
-    for k in states_3CP(cache_capacity):
-        index +=1 ;
-        if alloc == k:
+        the index of the allocation given in parameter
+    """   
+    
+    k=sum(alloc)
+    n=len(alloc)
+    index=0
+    for state in states_nCP(k,n):
+        if alloc==state:
             return index
-
-
+        else:
+            index+=1
+            
+            
+            
+        
 #Utile uniquement pour tester la convergence
 def sarsa_pour_3(request_rate, nb_intervalle, taille_intervalle): #intervalle, request_rate, gamma, epsilon, cache_capacity, alpha
     init()

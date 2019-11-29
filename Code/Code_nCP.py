@@ -5,23 +5,19 @@ Created on Fri Nov 22 15:09:37 2019
 
 @author: tdh
 """
-def states_nCP(n,cache_capacity,states):
+def states_nCP(k,n):
+    output_state_list=[]
     if n==1:
-        for i in range(cache_capacity+1):
-            states[i]=[i]
-        return(states)
+        output_state_list=[[n]]
+    elif n==2:
+        for j in range(k+1):
+            output_state_list.append([j, k-j])
+        return(output_state_list)
     else:
-       for i in range (cache_capacity + 1):
-           states[i]=
-           for i in range(cache_capacity - m+1):
-               
-               L.append([m, states_2CP(cache_capacity - m)[i][0], states_2CP(cache_capacity - m)[i][1]])
-
-def create_Q_matrix(n,cache_capacity):
-    Q_matrix= dict()
-    states=states_nCP(n,cache_capcity)
-    for state in states:
-        for action in states:
-            Q_matrix[state,action]=0
-    
+        for i in range (k+1):
+            other_states=states_nCP(k-i,n-1)
+            for state in other_states:
+                state.append(i)
+                output_state_list.append(state)
+        return(output_state_list)
 
