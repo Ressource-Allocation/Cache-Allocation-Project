@@ -54,15 +54,21 @@ def find_max_list(vec):
     
     """
     maxi=vec[0]
-    argmax=[]
+    argmax=[0]
     for i in range(len(vec)):  
-        if vec[i]>max:
+        if vec[i]>maxi:
             maxi=vec[i]
             argmax=[i]
         elif vec[i]== max:
             argmax.append(i)
     
     return(maxi, argmax)
+    
+def list_sum(L):
+    S=0
+    for i in L:
+        S+=i
+    return(S)
 
 
 def find_best_action(rewards, state_index):

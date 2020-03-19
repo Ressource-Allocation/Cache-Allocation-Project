@@ -8,7 +8,7 @@ def zipf_distribution(alpha, nb_videos):
         nb_videos est le nombre de films du catalogue du content provider
         alpha est le paramètre présent dans la loi de distribution de zipf"""
     norm=0
-    "indices_videos = range(1,nb_videos+1)" # necessaire pour tracer le plot (decocher si besoin)
+    indices_videos = range(1,nb_videos+1) # necessaire pour tracer le plot (decocher si besoin)
     probabilites_pi = [0] * (nb_videos)
     for i in range(1, nb_videos+1):
         norm +=1.0/(i**alpha)
@@ -16,19 +16,17 @@ def zipf_distribution(alpha, nb_videos):
     for i in range(1, nb_videos+1):
         pi = (1.0/i**alpha) * (1.0/norm)
         probabilites_pi[i-1] = pi
-    
-    """           
-    plt.plot(indices_videos, probabilites_pi, "-")
+               
+    """plt.plot(indices_videos, probabilites_pi, "-")
     plt.title('Distribution Zipf')
     plt.xlabel('Indice des videos')
     plt.ylabel('Probabilites Zipf des videos')
     plt.grid('on')
-    plt.show()
-    """    
+    plt.show()"""
     return probabilites_pi
     
 
-def Request_creation(proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_videos_nf):
+def Request_creation(proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_videos_nf): #utiliser des listes de probas (de somme=1),d'alphas et nb_videos
     """ Cette fonction complète la création d'un input
         Elle permet de créer une requête portant sur une vidéo i d'un content provider"""
     Content_Provider = 'a determiner'
@@ -58,7 +56,7 @@ def Request_creation(proba_yt, alpha_yt, alpha_nf, nb_videos_yt, nb_videos_nf):
     return [Content_Provider, video_choisie]
     
 
-def decide_naive_alloc(nb_videos_yt, nb_videos_nf, cache_capacity):
+def decide_naive_alloc(nb_videos_yt, nb_videos_nf, cache_capacity): #utiliser des listes de nombres de vidéos et retourner une liste d'allocation,
     """ Cette fonction réalise une allocation naive du cache entre les content providers"""
     allocation_yt = ((1.0 * nb_videos_yt)/(nb_videos_yt + nb_videos_nf)) * cache_capacity
     allocation_nf = ((1.0 * nb_videos_nf)/(nb_videos_yt + nb_videos_nf)) * cache_capacity
