@@ -1,0 +1,5 @@
+#This file is a YAML file to contain the different parametres
+
+request_rate: [10,100]
+interval_size: [1,10]
+delta1: [20,40,100]

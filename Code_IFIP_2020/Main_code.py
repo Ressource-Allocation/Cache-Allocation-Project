@@ -10,6 +10,9 @@ import random as rd
 import numpy as np
 import Auxiliary_functions as af #To simplify code
 from copy import deepcopy #allow to make independant copies of lists (not just aliases)
+import yaml
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def init():
     """
@@ -23,7 +26,6 @@ def init():
     global cache_capacity #Cache capacity
     global nb_videos #nb of videos for each SP
     global nb_bins #nb of bins for each SP where videos are stored
-    global nb_videos_bins #nb of videos in a bin
     global gamma #equation parameter to compute the new Q in SARSA
     global epsilon #epsilon-greedy politic
     global alpha_de_sarsa #equation parameter to compute the new Q in SARSA
@@ -450,22 +452,27 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
 def write_results():
     """writes results of simulations in csv files
     """
-    for request_rate in [10,100]:
-        for interval_size in [1,10]:
-            nb_interval=int(40000/interval_size)
-            for delta1 in  [20,40,100]:
-                [total_cost_sarsa,nominal_cost_sarsa,cost_first, cost_best]=sarsa_nSP(request_rate, nb_interval, interval_size, gamma, epsilon, alpha_de_sarsa,delta1)
-            
-                filename='sarsa_cache1000_request_rate'+str(request_rate)+'_nb_interval'+str(nb_interval)+'interval_size'+str(interval_size)+'delta'+str(delta1)+'.csv'
-                f = open(filename, "w")
-                f.write("Time_seconds;Time_hours;Total_Cost;Nominal_Cost;Cost_First;Best_Cost"+"\n")  
-                
-                for i in range(len(total_cost_sarsa)):
-                    f.write(str(i*interval_size).replace(".",",")+";"+str(i*interval_size/3600).replace(".",",")+";"+str(total_cost_sarsa[i]).replace(".",",")+";"+str(nominal_cost_sarsa[i]).replace(".",",")+";"+str(cost_first[i]).replace(".",",")+";"+str(cost_best[i]).replace(".",",")+"\n")
-                
-                f.close()
 
+    file = open("param.yml")
+    parameters = yaml.load(file, Loader=yaml.FullLoader)
+    request_rate = (parameters.get("request_rate"))[0] #0 for 10 and 1 for 100
+    interval_size = (parameters.get("interval_size"))[0] #0 for 1 and 1 for 10
+    delta1 = (parameters.get("delta1"))[0] #0 for 20, 1 for 40 and 2 for 100
 
+    nb_interval = int(40000/interval_size)
+    [total_cost_sarsa,nominal_cost_sarsa,cost_first, cost_best] = sarsa_nSP(request_rate, nb_interval, interval_size, gamma, epsilon, alpha_de_sarsa,delta1)
+    filename = 'sarsa_cache1000_request_rate'+str(request_rate)+'_nb_interval'+str(nb_interval)+'interval_size'+str(interval_size)+'delta'+str(delta1)+'.csv'
+    f = open(filename, "w")
+    f.write("Time_seconds;Time_hours;Total_Cost;Nominal_Cost;Cost_First;Best_Cost"+"\n")  
+                
+    for i in range(len(total_cost_sarsa)):
+        f.write(str(i*interval_size).replace(".",",")+";"+str(i*interval_size/3600).replace(".",",")+";"+str(total_cost_sarsa[i]).replace(".",",")+";"+str(nominal_cost_sarsa[i]).replace(".",",")+";"+str(cost_first[i]).replace(".",",")+";"+str(cost_best[i]).replace(".",",")+"\n")
+                
+    f.close()
 
 write_results()
+
+  
+
+
        
