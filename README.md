@@ -8,7 +8,9 @@ Such problems do occur in various fields, be it economics, investments, advertis
 This project revolves around network operators allocating their caches to content providers.
 
 Théo Bouganim under the supervision of Assoc. Prof Andrea Araldo continued the project until the publication of an article at the ITC32 PhD Workshop 
-Here you can find the article: The Cost of Learning Fast with Reinforcement Learning for Edge Cache Allocation
+Here you can find the article: 
+The Cost of Learning Fast with Reinforcement Learning for Edge Cache Allocation
+
 https://itc32.org/assets/posters/phdws2.pdf 
 
 Here is the video presentation made by Théo Bouganim
