@@ -12,5 +12,6 @@ Here you can find the article: The Cost of Learning Fast with Reinforcement Lear
 https://itc32.org/assets/posters/phdws2.pdf 
 
 Here is the video presentation made by Théo Bouganim
-youtube.com/watch?v=ISjCO669M68&feature=youtu.be&fbclid=IwAR2pKNgE7py5fyxfqMimpXVdEkfCh5jD0rA6QmMwhtaP4mAF6--z-OC3YOs
+https://youtu.be/ISjCO669M68
+
 
