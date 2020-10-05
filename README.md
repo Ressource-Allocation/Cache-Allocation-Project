@@ -11,7 +11,6 @@ Here you can find the article:
 https://itc32.org/assets/posters/phdws2.pdf 
 
 Here is the video presentation made by Théo Bouganim
-https://youtu.be/ISjCO669M68
-
+https://youtu.be/yKXC1Vbmqwk
 
 The initiators of this project are Gabriel Guez and Nessim Oussedik, under the supervision of Assoc. Prof. Andrea Araldo, at Télécom SudParis.
