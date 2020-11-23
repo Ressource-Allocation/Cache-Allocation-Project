@@ -255,8 +255,7 @@ def evaluate_cost(allocation,first_alloc,best_alloc, requests_nb,video_probabi,b
             f_cost+=1
     return(cost,f_cost,b_cost)
 
-
-def states_nSP(capacity,numberSP,delta2):
+def states_nSP(capacity, numberSP, delta2): 
     """
     Returns all possibles states (cache capacity allocations) for n Content Providers, given a cache capacity (k) and a delta(pass of )
     
@@ -267,7 +266,8 @@ def states_nSP(capacity,numberSP,delta2):
     numberSP: int
         Number of Service Providers
     delta2: int
-        Number of slots by which we modify the storage allocation 
+        Number of slots by which we modify the storage allocation
+         
     
     Returns
     ----------
@@ -283,7 +283,7 @@ def states_nSP(capacity,numberSP,delta2):
             output_state_list.append([j*delta2, capacity-j*delta2])
         return(output_state_list)
     else:
-        for i in range(int(capacity/delta2)+1):
+        for i in range(int(capacity/delta2)+1): 
             other_states=states_nSP(capacity-i*delta2,numberSP-1,delta2)
             for state in other_states:
                 state.append(i*delta2)
@@ -318,10 +318,9 @@ def get_state_index(alloc,delta):
             
 
             
-
-def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta): #intervalle, request_rate, gamma, epsilon, cache_capacity, alpha
+def optimize_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa, delta, D, method): 
     """
-    SARSA algorithm with instantaneous reward equal to nominal_cost. Compute evolution of costs over the simulation
+    Algorithm with instantaneous reward equal to nominal_cost. Compute evolution of costs over the simulation
     (costs are normalized by the number of requests observed in an interval (interval_size*request_rate)
     Parameters
     ------------ 
@@ -338,7 +337,11 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
     alfa: float
         Usual alpha parameter of SARSA/Q-learning algorithm (learning rate)
     delta: int
-        Number of slots by which we modify the storage allocation 
+        Number of slots by which we modify the storage allocation
+    D: set
+        Possible action space of delta 
+    method: string
+        The optimization method (could be SARSA or Q-learning)
         
     Returns    
     ----------
@@ -351,6 +354,7 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
     L_best_cost: list of float
         list containing the evolution over interval of the cost of the optimal allocation (independant of SARSA or Q-learning algorithm)    
     """   
+
     init()
     (videos_proba,bins_proba)=catalog()
     L_total_cost=[]
@@ -369,17 +373,21 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
     V = np.zeros((nSP**2, len(states)))
     count_alea = 0 #number of exploratory actions
     count_best = 0 #number of exploitative actions
+    D_size = len(D) #the size of actions space
+
     ###### ACTION %%%%%
     for j in range(nb_interval):
         print(j)
         alea = rd.random()
         old_allocation = deepcopy(allocation)
+        coeff_ind = rd.randint(0, D_size-1)
+        coeff = D[coeff_ind]
         if alea <= epsi: # epsilon-greedy policy
             action=rd.randint(0,nSP**2-1)
             action_plus = action//(nSP)
             action_minus = action % (nSP)
-            allocation[action_plus]+=delta
-            allocation[action_minus]-=delta
+            allocation[action_plus] += coeff * delta
+            allocation[action_minus] -= coeff * delta
             count_alea+=1
     
         else: 
@@ -387,8 +395,8 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
             action=rd.choice(best_actions)
             action_plus=action // (nSP)
             action_minus=action % (nSP)
-            allocation[action_plus]+=delta
-            allocation[action_minus]-=delta
+            allocation[action_plus] += coeff * delta
+            allocation[action_minus] -= coeff * delta
         #if DEBUG:
         #    print('allocation is', allocation)
         #    print('action_plus is',action_plus)
@@ -405,12 +413,12 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
         if allocation_ok:
             #### REWARD COMPUTING #####
             (nominal_cost,first_cost,best_cost) = evaluate_cost(allocation,first_allocation,best_allocation,request_nb,videos_proba,bins_proba)
-            perturbation_cost = (allocation[action_plus] - old_allocation[action_plus]) #/ request_nb
-            nominal_cost = nominal_cost #/request_nb
+            perturbation_cost = (allocation[action_plus] - old_allocation[action_plus]) / request_nb
+            nominal_cost = nominal_cost /request_nb
             total_cost = nominal_cost + perturbation_cost
-            first_cost = first_cost #/request_nb
-            best_cost = best_cost #/request_nb                
-            new_gain = request_nb - total_cost  #Reward (the target is the nominal cost, if the total cost is the target the algorithm will be instable)
+            first_cost = first_cost /request_nb
+            best_cost = best_cost /request_nb                
+            new_gain = 1 - total_cost  #Reward
             #if DEBUG:
             #    print('new_gain is',new_gain)
             ## Q-TABLE UPDATE###
@@ -421,12 +429,16 @@ def sarsa_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa,delta):
             #    print('action is ', action)
             if action_plus == action_minus:
                 for act in range(nSP):
-                    Q[act*nSP][state_index]+=alfa*(new_gain+gama*best_score1-Q[act][state_index]) #Q-Learning
-                    #Q[act*nSP][state_index]+=alfa*(new_gain+gama*Q[act][state_index_prime]-Q[act][state_index]) #SARSA
+                    if method == 'Q_learning':
+                        Q[act*nSP][state_index]+=alfa*(new_gain+gama*best_score1-Q[act][state_index]) #Q-Learning
+                    if method == 'SARSA':
+                        Q[act*nSP][state_index]+=alfa*(new_gain+gama*Q[act][state_index_prime]-Q[act][state_index]) #SARSA
                 V[action][state_index]+=1
             else:
-                Q[action][state_index]+=alfa*(new_gain+gama*best_score1-Q[action][state_index]) #Q-Learning
-                #Q[action][state_index]+=alfa*(new_gain+gama*Q[action][state_index_prime]-Q[action][state_index]) #SARSA
+                if method == 'Q_learning':
+                    Q[action][state_index]+=alfa*(new_gain+gama*best_score1-Q[action][state_index]) #Q-Learning
+                if method == 'SARSA':
+                    Q[action][state_index]+=alfa*(new_gain+gama*Q[action][state_index_prime]-Q[action][state_index]) #SARSA
             #if DEBUG:
             #    print('Q[action=',action,'],[state_index',state_index,']=',Q[action][state_index])
             #    print('Q[action=+',action_plus,'-',action_minus,'][,allocation', old_allocation,']=',Q[action][state_index])
@@ -452,11 +464,13 @@ def write_results():
     parameters = yaml.load(file, Loader=yaml.FullLoader)
     request_rate = (parameters.get("request_rate"))[2] #0 for 10, 1 for 100 and 2 for 1000
     interval_size = (parameters.get("interval_size"))[0] #0 for 1 and 1 for 10
-    delta1 = (parameters.get("delta1"))[2] #0 for 20, 1 for 40 and 2 for 100
+    delta1 = (parameters.get("delta1"))[1] #0 for 20, 1 for 50 and 2 for 100
+    method = (parameters.get("method"))[1] #0 for SARSA, 1 for Q-learning and 2 for SPSA
+    D = (parameters.get("D"))[1] #0 for [1], 1 for [1, 2] and 2 for [1, 2, 4, 8]
 
     nb_interval = int(40000/interval_size)
-    [total_cost_sarsa,nominal_cost_sarsa,cost_first, cost_best] = sarsa_nSP(request_rate, nb_interval, interval_size, gamma, epsilon, alpha_de_sarsa,delta1)
-    filename = 'sarsa_cache1000_request_rate'+str(request_rate)+'_nb_interval'+str(nb_interval)+'interval_size'+str(interval_size)+'delta'+str(delta1)+'_q_learning_NN_total_cost.csv' # I changed the file name to clarify that we use the total cost
+    [total_cost_sarsa,nominal_cost_sarsa,cost_first, cost_best] = optimize_nSP(request_rate, nb_interval, interval_size, gamma, epsilon, alpha_de_sarsa,delta1,D,method)
+    filename = 'sarsa_cache1000_request_rate'+str(request_rate)+'_nb_interval'+str(nb_interval)+'interval_size'+str(interval_size)+'delta'+str(delta1)+'method_'+str(method)+'_dynamic.csv' # I changed the file name to clarify that we use the total cost
     f = open(filename, "w")
     f.write("Time_seconds,Time_hours,Total_Cost,Nominal_Cost,Cost_First,Best_Cost"+"\n")  
                 
@@ -464,10 +478,5 @@ def write_results():
         f.write(str(i*interval_size)+","+str(i*interval_size/3600)+","+str(total_cost_sarsa[i])+","+str(nominal_cost_sarsa[i])+","+str(cost_first[i])+","+str(cost_best[i])+"\n")
                 
     f.close()
-
+    
 write_results()
-
-  
-
-
-       
