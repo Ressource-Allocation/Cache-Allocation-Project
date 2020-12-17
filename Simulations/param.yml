@@ -1,7 +1,7 @@
 #This file is a YAML file to contain the different parametres
 
-request_rate: [10,100,1000]
-interval_size: [1,10]
-delta1: [20,50,100]
+request_rate: [10, 100, 1000]
+interval_size: [1, 10]
+delta1: [2, 10, 50]
 method: ['SARSA', 'Q_learning','SPSA']
-D: [[1], [1, 2], [1, 2, 4, 8]]  #space of Delta
+D: [[1], [1, 2, 4], [1, 2, 4, 8]]  #space of Delta
