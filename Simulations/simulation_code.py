@@ -377,11 +377,11 @@ def optimize_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa, del
 
     ###### ACTION %%%%%
     for j in range(nb_interval):
-        print(j)
         alea = rd.random()
         old_allocation = deepcopy(allocation)
         coeff_ind = rd.randint(0, D_size-1)
         coeff = D[coeff_ind]
+        print('iteration: ' + str(j) + ' ' + 'perturbation: ' + str(coeff * delta))
         if alea <= epsi: # epsilon-greedy policy
             action=rd.randint(0,nSP**2-1)
             action_plus = action//(nSP)
@@ -463,12 +463,12 @@ def write_results():
     file = open("param.yml")
     parameters = yaml.load(file, Loader=yaml.FullLoader)
     request_rate = (parameters.get("request_rate"))[2] #0 for 10, 1 for 100 and 2 for 1000
-    interval_size = (parameters.get("interval_size"))[0] #0 for 1 and 1 for 10
-    delta1 = (parameters.get("delta1"))[1] #0 for 20, 1 for 50 and 2 for 100
+    interval_size = (parameters.get("interval_size"))[1] #0 for 1 and 1 for 10
+    delta1 = (parameters.get("delta1"))[1] #0 for 2, 1 for 10 and 2 for 50
     method = (parameters.get("method"))[1] #0 for SARSA, 1 for Q-learning and 2 for SPSA
-    D = (parameters.get("D"))[1] #0 for [1], 1 for [1, 2] and 2 for [1, 2, 4, 8]
+    D = (parameters.get("D"))[1] #0 for [1], 1 for [1, 2, 4] and 2 for [1, 2, 4, 8]
 
-    nb_interval = int(40000/interval_size)
+    nb_interval = int(400000/interval_size)
     [total_cost_sarsa,nominal_cost_sarsa,cost_first, cost_best] = optimize_nSP(request_rate, nb_interval, interval_size, gamma, epsilon, alpha_de_sarsa,delta1,D,method)
     filename = 'sarsa_cache1000_request_rate'+str(request_rate)+'_nb_interval'+str(nb_interval)+'interval_size'+str(interval_size)+'delta'+str(delta1)+'method_'+str(method)+'_dynamic.csv' # I changed the file name to clarify that we use the total cost
     f = open(filename, "w")
