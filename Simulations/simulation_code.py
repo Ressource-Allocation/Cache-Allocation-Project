@@ -339,7 +339,7 @@ def optimize_nSP(request_rate, nb_interval, interval_size, gama, epsi, alfa, del
     delta: int
         Number of slots by which we modify the storage allocation
     D: set
-        Possible action space of delta 
+        Set of coefficients of delta meaning we modify the storage allocation by D(i) * delta where i is the index of the ith element in D
     method: string
         The optimization method (could be SARSA or Q-learning)
         
